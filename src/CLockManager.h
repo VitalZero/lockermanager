@@ -2,44 +2,37 @@
 #define _CLOCKMANAGER_H
 
 // <iostream> and <string> included in CLockers.h
-#include <fstream>
+#include <iostream>
 #include <vector>
 #include "CLockers.h"
+#include "CDocument.h"
 
 class CLockManager
 {
 public:
+	CLockManager() = delete;
 	CLockManager(const std::string& path_in);
 	~CLockManager()
 	{
-		archivo.close();
 	}
 
 public:
-	//void ShowLockers(int show = Filtro::Todos);
 	bool AddLocker(const CLockers& locker_in);
-	std::vector<CLockers> GetLockers(int show = Filtro::Todos);
-	bool ChangeUser(int locker_in,const std::string& newAssigned);
+	CLockers GetLockers(int numLocker, CLockers::Filtro show = CLockers::Filtro::Todos);
+	int GetLockersQty() const;
+	bool ChangeUser(int locker_in,const std::string& newAssigned, bool owned = true);
 	bool DeleteUser(int locker_in);
 	void SaveChanges();
 	int Search(int numLocker);
+	bool SearchUser(const std::string& usuario, std::vector<CLockers>& lockers_in );
 	std::string ToUpper(const std::string& str_in);
-	enum Filtro
-	{
-		Buenos,
-		Regulares,
-		Malos,
-		Todos,
-		Asignados,
-		SinAsignar
-	};
+	bool Init();
 
 private:
-	void FillLockers();
-	std::string path;
-	std::fstream archivo;
+	CDocument doc;
 	std::vector<CLockers> lockers;
 	std::string currDate;
+	int totalLockers;
 };
 
 #endif
