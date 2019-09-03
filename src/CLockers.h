@@ -17,8 +17,8 @@ private:
 	int status;
 	bool enabled;
 	bool isOwned;
-	const std::string descStatus[3] = {"Bueno", "Regular", "Malo"};
-	const std::string withKey[2] = { "Si", "No" };
+	const std::string descStatus[3] = {"Good", "Regular", "Bad"};
+	const std::string withKey[2] = { "Yes", "No" };
 
 public:
 	CLockers()
@@ -58,6 +58,7 @@ public:
 		isOwned(true)
 	{
 	}
+	CLockers& operator=(const CLockers& rhs);
 	int GetLockerNumber() const;
 	int GetStatusInt() const;
 	std::string GetAssignedUser() const;
@@ -83,9 +84,9 @@ public:
 		Asignados,
 		SinAsignar
 	};*/
-	enum class Filtro
+	enum class Filter
 	{
-		Todos, Asignados, SinAsignar, Buenos, Malos, SinLlave, ConLlave, Habilitados, Deshabilitados,
+		All, Assigned, NotAssigned, Good, Bad, NoKey, WithKey, Enabled, Disabled,
 		Exit = -1
 	};
 };

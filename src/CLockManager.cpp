@@ -1,10 +1,10 @@
 #include "CLockManager.h"
 #include <ctime>
-//#include <sstream>
 
 CLockManager::CLockManager(const std::string& path_in)
 	:
-	doc(path_in)
+	doc(path_in),
+	totalLockers(0)
 {
 	time_t now;
 
@@ -24,7 +24,7 @@ bool CLockManager::AddLocker(const CLockers& locker_in)
 
 	if(Search(tmpNumLoc) >= 0)
 	{
-		std::cout << "\tYa exsiste el locker " << tmpNumLoc << ", no se agregó"
+		std::cout << "\tLocker already exist " << tmpNumLoc << ", not added."
 				<< std::endl;
 
 		return false;
@@ -37,29 +37,62 @@ bool CLockManager::AddLocker(const CLockers& locker_in)
 	}
 }
 
-CLockers CLockManager::GetLockers(int numLocker, CLockers::Filtro show)
+bool CLockManager::GetLockers(std::vector<CLockers>& lockers_in, CLockers::Filter show)
 {
-	if(show == CLockers::Filtro::Todos)
+	// TODO: Filter input
+	lockers_in.clear();
+	bool result = false;
+
+	switch(show)
 	{
-		return lockers.at(numLocker);
-	}
-	else if(show == CLockers::Filtro::Asignados)
-	{
-		if(lockers.at(numLocker).IsAssigned())
-			return lockers.at(numLocker);
-	}
-	else if(show == CLockers::Filtro::SinAsignar)
-	{
-		if(!lockers.at(numLocker).IsAssigned())
-			return lockers.at(numLocker);
-	}
-	else if(show == CLockers::Filtro::Buenos)
-	{
-		if(lockers.at(numLocker).GetStatusInt() == 0)
-		return lockers.at(numLocker);
+		case CLockers::Filter::All:
+			lockers_in = lockers;
+			result = true;
+		break;
+		case CLockers::Filter::Assigned:
+		{
+			for(unsigned int i= 0; i < lockers.size(); ++i)
+			{
+				if(lockers.at(i).IsAssigned())
+					lockers_in.push_back(lockers.at(i));
+			}
+			if(lockers_in.size() > 0)
+				result = true;
+		}
+		break;
+		case CLockers::Filter::NotAssigned:
+		{
+			for(unsigned int i= 0; i < lockers.size(); ++i)
+			{
+				if(!lockers.at(i).IsAssigned())
+					lockers_in.push_back(lockers.at(i));
+			}
+			if(lockers_in.size() > 0)
+				result = true;
+		}
+		break;
+		case CLockers::Filter::Good:
+		{
+			for(unsigned int i= 0; i < lockers.size(); ++i)
+			{
+				if(!lockers.at(i).GetStatusInt() == 0)
+					lockers_in.push_back(lockers.at(i));
+			}
+			if(lockers_in.size() > 0)
+				result = true;
+		}
+		break;
+		case CLockers::Filter::Bad:
+		case CLockers::Filter::Disabled:
+		case CLockers::Filter::Enabled:
+		case CLockers::Filter::NoKey:
+		case CLockers::Filter::WithKey:
+		case CLockers::Filter::Exit:
+		break;
 	}
 
-	return CLockers(-1);
+	// result defaults to false, true will be set only if there are matches
+	return result;
 }
 
 int CLockManager::GetLockersQty() const
@@ -80,10 +113,10 @@ bool CLockManager::ChangeUser(int locker_in,const std::string& newAssigned, bool
 		lockers.at(foundLockerPos).SetDate(currDate);
 		lockers.at(foundLockerPos).SetOwnership(owned);
 		std::cout << "\t\nLocker " << lockers.at(foundLockerPos).GetLockerNumber()
-				<< " editado con exito." << std::endl;
-		std::cout << "Nuevo usuario: " << lockers.at(foundLockerPos).GetAssignedUser() << std::endl;
+				<< " succesfully edited." << std::endl;
+		std::cout << "New User: " << lockers.at(foundLockerPos).GetAssignedUser() << std::endl;
 
-		return true;
+		return SaveChanges();
 	}
 
 	return false;
@@ -94,12 +127,14 @@ bool CLockManager::DeleteUser(int locker_in)
 	return ChangeUser(locker_in, "", false);
 }
 
-void CLockManager::SaveChanges()
+bool CLockManager::SaveChanges()
 {
-	if(doc.SaveData(lockers))
+	bool saved = doc.SaveData(lockers);
+
+	if(saved)
 		doc.LoadData(lockers);
-	else
-		std::cout << "ERROR!!\tNo se pudo guardar el archivo" << std::endl;
+
+	return saved;
 }
 
 int CLockManager::Search(int numLocker_in)
@@ -115,18 +150,16 @@ int CLockManager::Search(int numLocker_in)
 	return NORESULTS;
 }
 
-bool CLockManager::SearchUser(const std::string& usuario, std::vector<CLockers>& lockers_in )
+bool CLockManager::SearchUser(const std::string& user, std::vector<CLockers>& lockers_in )
 {
 	lockers_in.clear();
 	size_t result = std::string::npos;
-	//std::cout << "\nValor de npos: " << std::string::npos << std::endl;
 
 	for( CLockers l : lockers)
 	{
-		result = l.GetAssignedUser().find(ToUpper(usuario));
+		result = l.GetAssignedUser().find(ToUpper(user));
 		if( result != std::string::npos )
 		{
-			//std::cout << "Se encontro un resultado: " << l.GetAssignedUser() << std::endl;
 			lockers_in.push_back(l);
 		}
 	}
@@ -151,9 +184,8 @@ std::string CLockManager::ToUpper(const std::string& str_in)
 	return tmp;
 }
 
-bool CLockManager::Init()
+bool CLockManager::LoadData()
 {
-	lockers.clear();
 	if( doc.LoadData(lockers) )
 	{
 		totalLockers = lockers.size();

@@ -5,6 +5,19 @@
  *      Author: jmichel
  */
 #include "CLockers.h"
+CLockers& CLockers::operator=(const CLockers& rhs)
+{
+	this->assigned = rhs.assigned;
+	this->date = rhs.date;
+	this->enabled = rhs.enabled;
+	this->hasKey = rhs.hasKey;
+	this->isOwned = rhs.isOwned;
+	this->lockerNum = rhs.lockerNum;
+	this->previous = rhs.previous;
+	this->status = rhs.status;
+
+	return *this;
+}
 
 int CLockers::GetLockerNumber() const
 {
@@ -83,17 +96,7 @@ std::ostream& operator<<(std::ostream& stream, const CLockers& data)
 		<< data.hasKey << "|"
 		<< data.status << "|"
 		<< data.enabled << "|"; //\n opcional
-	/*
-	stream << data.numLocker << " "
-		<< data.assigned.size() << " "
-		<< data.assigned << " "
-		<< data.date.size() << " "
-		<< data.date << " "
-		<< data.previous.size() << " "
-		<< data.previous << " "
-		<< data.status << " "
-		<< data.conLlave << "\n"
-		;*/
+
 	return stream;
 }
 
@@ -102,48 +105,29 @@ std::istream& operator>>(std::istream& stream, CLockers& data)
 	std::string temp;
 	// lockerNum
 	std::getline(stream, temp, '|'); // If the file is UNICODE, must ignore first 3 bytes of the file
-	data.lockerNum = std::atoi(temp.c_str());
+
+	if(stream.fail())
+		return stream;
+
+	data.lockerNum = std::stoi(temp.c_str());
 
 	std::getline(stream, data.assigned, '|');
 	std::getline(stream, data.date, '|');
 	std::getline(stream, data.previous, '|');
 	// isOwned
 	std::getline(stream, temp, '|');
-	data.isOwned = std::atoi(temp.c_str());
+	data.isOwned = std::stoi(temp.c_str());
 	// hasKey
 	std::getline(stream, temp, '|');
-	data.hasKey = std::atoi(temp.c_str());
+	data.hasKey = std::stoi(temp.c_str());
 	// status
 	std::getline(stream, temp, '|');
-	data.status = std::atoi(temp.c_str());
+	data.status = std::stoi(temp.c_str());
 	// enabled
 	std::getline(stream, temp, '|');
-	data.enabled = std::atoi(temp.c_str());
+	data.enabled = std::stoi(temp.c_str());
 	//stream.ignore();
 
-	/*
-	int size;
-
-	stream >> data.numLocker >> size;
-	stream.ignore(256, ' ');
-	data.assigned.resize(size);
-	stream.read(&data.assigned[0], size);
-	stream.ignore(256, ' ');
-
-	stream >> size;
-	stream.ignore(256, ' ');
-	data.date.resize(size);
-	stream.read(&data.date[0], size);
-	stream.ignore(256, ' ');
-
-	stream >> size;
-	stream.ignore(256, ' ');
-	data.previous.resize(size);
-	stream.read(&data.previous[0], size);
-	stream.ignore(256, ' ');
-
-	stream >> data.status >> data.conLlave;
-	*/
 	return stream;
 }
 

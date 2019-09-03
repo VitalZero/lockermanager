@@ -6,9 +6,9 @@ SimpleMenu::SimpleMenu(CLockManager& manager_in)
 	:
 	manager(manager_in)
 {
-	if( !manager.Init() )
+	if( !manager.LoadData() )
 	{
-		std::cerr << "Error!, no se pudo cargar la base de datos" << std::endl;
+		std::cerr << "Error!, database could not be loaded" << std::endl;
 		error = true;
 	}
 }
@@ -20,16 +20,18 @@ void SimpleMenu::ShowMenu()
 
 	while(running && !error)
 	{
-		std::wcout << "\n\t\tGestion de Lockers\n";
-		std::cout << "\t\tMenu principal\n\n";
-		std::cout << "\tTeclea una de las siguientes opciones:\n";
-		std::cout << (int)Opciones::Listar << "  Listar lockers\n";
-		std::cout << (int)Opciones::Cambiar << "  Cambiar usuario\n";
-		std::cout << (int)Opciones::Borrar << "  Borrar usuario\n";
-		std::cout << (int)Opciones::Agregar << "  Agregar usuario\n";
-		std::cout << (int)Opciones::Buscar << "  Buscar usuario\n";
-		std::cout << (int)Opciones::Salir << "  Salir" << std::endl;
-		std::cin >> answer;
+		std::cout << "\n\t\tLocker Manager\n";
+		std::cout << "\t\tMain Menu\n\n";
+		std::cout << "\tType one of the following options:\n";
+		std::cout << (int)Options::List << "  List lockers\n";
+		std::cout << (int)Options::Change << "  Change user\n";
+		std::cout << (int)Options::Delete << "  Delete user\n";
+		std::cout << (int)Options::Add << "  Add locker\n";
+		std::cout << (int)Options::Find << "  Find user\n";
+		std::cout << (int)Options::Exit << "  Exit" << std::endl;
+
+		std::string tmp;
+		std::getline(std::cin, tmp);
 
 		if(std::cin.fail() )
 		{
@@ -39,68 +41,72 @@ void SimpleMenu::ShowMenu()
 			error = true;
 		}
 
-		std::cin.ignore();
+		if(tmp != "")
+			answer = std::stoi(tmp);
 
-		switch( (Opciones)answer )
+		switch( (Options)answer )
 		{
-		case Opciones::Listar:
+		case Options::List:
 			ShowLockers();
 			break;
-		case Opciones::Cambiar:
+		case Options::Change:
 			ChangeUser();
 			break;
-		case Opciones::Borrar:
+		case Options::Delete:
 			DeleteUser();
 			break;
-		case Opciones::Agregar:
+		case Options::Add:
 			AddUser();
 			break;
-		case Opciones::Salir:
+		case Options::Exit:
 			running = false;
 		break;
-		case Opciones::Buscar:
+		case Options::Find:
 			SearchUser();
 		break;
 		default:
-			std::cout << "\t\nOpcion incorrecta\n" << std::endl;
+			std::cout << "\t\nInvalid option\n" << std::endl;
 			break;
 		}
 	}
 
-	std::cout << "\t\n...Hasta pronto!" << std::endl;
+	std::cout << "\t\n...See ya!" << std::endl;
 }
 
 void SimpleMenu::ChangeUser()
 {
-	std::cout << "\nCual locker quieres cambiar?: ";
-	int answer = 0;
-	std::cin >> answer;
+	std::cout << "\nWhich locker do you want to change?: ";
 
-	if( std::cin.fail() || answer == 0 )
+	std::string tmp;
+	std::getline(std::cin, tmp);
+	int answer = 0;
+
+	if(tmp != "")
+		answer = std::stoi(tmp);
+
+	if( std::cin.fail() || answer == 0)
 	{
 		std::cin.clear();
 		std::cin.ignore();
-		std::cerr << "Error!!! Datos introducidos son erroneos" << std::endl;
+		std::cerr << "Error!!! Invalid data." << std::endl;
 		error = true;
 	}
 
-	std::cin.ignore();
-
-	std::cout << "Escribe el nombre de nuevo usuario: ";
+	std::cout << "Type new user's name: ";
 	std::string usuarioNuevo;
 	std::getline(std::cin,usuarioNuevo);
 
 	if(manager.ChangeUser(answer, usuarioNuevo) )
 	{
-		manager.SaveChanges();
-		std::cout << "Cambiando usuario" << std::endl;
+		//manager.SaveChanges();
+		std::cout << "changing user" << std::endl;
 	}
 	else
 	{
-		std::cerr << "\t\neERROR!!!\tNo se pudo cambiar el usuario" << std::endl;
+		std::cerr << "\t\neERROR!!!\tCouldn't change user" << std::endl;
 	}
 
-	std::cout << "Presione Enter para continuar..." << std::endl;
+	std::cout << "Press enter to continue..." << std::endl;
 
 	std::cin.ignore();
 }
@@ -108,72 +114,68 @@ void SimpleMenu::ChangeUser()
 void SimpleMenu::ShowLockers()
 {
 	// Show option to filter lockers
-	std::cout << "\n\n\tSelecciona la opcion a mostrar\n";
-	std::cout << "0 Todos\n";
-	std::cout << "1 Asignados\n";
-	std::cout << "2 Sin asignar\n";
-	std::cout << "3 En buen estado\n";
-	std::cout << "4 En mal estado\n";
-	std::cout << "-1 Regresar al menu anterior\n";
+	std::cout << "\n\tType one of the following options\n";
+	std::cout << "0 All\n";
+	std::cout << "1 Assigned\n";
+	std::cout << "2 Not assigned\n";
+	std::cout << "3 Good (not damaged)\n";
+	std::cout << "4 Bad (damaged)\n";
+	std::cout << "-1 Go back\n";
 
 	int answer;
-	std::cin >> answer;
+
+	std::string tmp;
+	std::getline(std::cin, tmp);
+
 	if(std::cin.fail() )
 	{
 		std::cin.clear();
 		std::cin.ignore();
-		std::cerr << "Error!!! Datos introducidos son erroneos" << std::endl;
+		std::cerr << "Error!!! Invalid data." << std::endl;
 		error = true;
 	}
 
-	std::cin.ignore();
+	if(tmp != "")
+		answer = std::stoi(tmp);
+
 	std::cout << "\n";
 
-	switch((CLockers::Filtro)answer)
+	// TODO: Change to a single if, for exit, for the rest use the function (function will filter correct input)
+	switch((CLockers::Filter)answer)
 	{
-		case CLockers::Filtro::Todos:
-		case CLockers::Filtro::Asignados:
-		case CLockers::Filtro::SinAsignar:
-		case CLockers::Filtro::Buenos:
-		case CLockers::Filtro::Malos:
+		case CLockers::Filter::All:
+		case CLockers::Filter::Assigned:
+		case CLockers::Filter::NotAssigned:
+		case CLockers::Filter::Good:
+		case CLockers::Filter::Bad:
 		{
-			// TODO: Change so it returns only the correct lockers (filtered)
-			// maybe use a vector of lockers passed as reference
-			// and return the amout of filtered lockers
-			int c = 0;
-			const int locQty = manager.GetLockersQty();
+			std::vector<CLockers> tmpLockers;
 			
-			for(int i = 0; i < locQty; ++i)
+			if(manager.GetLockers(tmpLockers, (CLockers::Filter)answer))
 			{
-				CLockers l = manager.GetLockers(i, CLockers::Filtro(answer));
-
-				if(l.GetLockerNumber() <= 0)
+				for(unsigned int i = 0; i < tmpLockers.size(); ++i)
 				{
-					continue;
+					std::cout << "# " << std::setw(2) << tmpLockers.at(i).GetLockerNumber() //<< "\t"
+						<< std::setiosflags(std::ios_base::left) << " "
+						<< std::setw(40) << tmpLockers.at(i).GetAssignedUser() //<< "\t"
+						<< std::setw(12) << tmpLockers.at(i).GetDate() //<< "\t"
+						//<< (l.HasKey() ? "Si" : "No") << "\t"
+						//<< l.GetStatusDescription() << "\t"
+						<< std::setw(15) << (tmpLockers.at(i).Enabled() ? "Enabled" : "Disabled") << std::endl;
+					std::cout << std::resetiosflags(std::ios_base::adjustfield);
+						//<< l.GetPreviousUser() << std::endl;
 				}
-				++c;
-
-				std::cout << "# " << std::setw(2) << l.GetLockerNumber() //<< "\t"
-					<< std::setiosflags(std::ios_base::left) << " "
-					<< std::setw(40) << l.GetAssignedUser() //<< "\t"
-					<< std::setw(12) << l.GetDate() //<< "\t"
-					//<< (l.HasKey() ? "Si" : "No") << "\t"
-					//<< l.GetStatusDescription() << "\t"
-					<< std::setw(15) << (l.Enabled() ? "Habilitado" : "Deshabilitado") << std::endl;
-				std::cout << std::resetiosflags(std::ios_base::adjustfield);
-					//<< l.GetPreviousUser() << std::endl;
 			}
-
-			std::cout << "\n" << c << " lockers encontrados\n";
-			std::cout << "Presione Enter para continuar..." << std::endl;	
+			std::cout << "\n" << tmpLockers.size() << " lockers found\n";
+			std::cout << "Press enter to continue..." << std::endl;
 			std::cin.ignore();
 		}
 		break;
-		case CLockers::Filtro::Exit:
-			std::cout << "Regresando al menu anterior" << std::endl;
+		case CLockers::Filter::Exit:
+			std::cout << "Returning to previous menu" << std::endl;
 		break;
 		default:
-			std::cout << "Opcion invalida, intenta de nuevo...\n" << std::endl;
+			std::cout << "Invalid option, try again...\n" << std::endl;
 			std::cin.ignore();
 		break;
 	}
@@ -181,8 +183,8 @@ void SimpleMenu::ShowLockers()
 
 void SimpleMenu::DeleteUser()
 {
-	std::cout << "Borrando usuario" << std::endl;
-	std::cout << "Presione Enter para continuar..." << std::endl;
+	std::cout << "Deleting user" << std::endl;
+	std::cout << "Press enter to continue..." << std::endl;
 
 	std::cin.ignore();
 }
@@ -196,17 +198,17 @@ void SimpleMenu::AddUser()
 	{
 		std::cin.clear();
 		std::cin.ignore();
-		std::cerr << "Error!!! Datos introducidos son erroneos" << std::endl;
+		std::cerr << "Error!!! Invalid data" << std::endl;
 	}
 
 	std::cin.ignore();
 
-	std::cout << "Nombre: ";
+	std::cout << "Name: ";
 	std::string nombre;
 	std::getline(std::cin, nombre);
 
 	// TODO: Check for string lenght, date should not be more then 8 characters (not including \0)
-	std::cout << "Fecha: ";
+	std::cout << "Date (dd/mm/yyy): ";
 	std::string fecha;
 	std::getline(std::cin, fecha);
 	std::cin.ignore();
@@ -214,25 +216,26 @@ void SimpleMenu::AddUser()
 	bool result = manager.AddLocker(CLockers(nombre, "SIN ASIGNAR", fecha, numero, 1, 1));
 
 	if(!result)
-		std::cerr << "No se pudo guardar el archivo al añadir usuario" << std::endl;
+		std::cerr << "Couldn't save database" << std::endl;
 }
 
 void SimpleMenu::SearchUser()
 {
-	std::cout << "\nEscribe el nombre a buscar: ";
+	std::cout << "\nTye user's name: ";
 	std::string user;
 	std::getline(std::cin, user);
+
 	if(std::cin.fail() )
 	{
 		std::cin.clear();
 		std::cin.ignore();
-		std::cerr << "Error!!! Datos introducidos son erroneos" << std::endl;
+		std::cerr << "Error!!! Invalid data." << std::endl;
 	}
 
 	std::vector<CLockers> tmp;
 	if(manager.SearchUser(user, tmp))
 	{
-		std::cout << "\nSe encontraron " << tmp.size() << " lockers!. Listando..." << "\n";
+		std::cout << "\n" << tmp.size() << "Lockers were found, listing..." << "\n";
 
 		for(unsigned int i = 0; i < tmp.size(); ++i)
 		{
@@ -242,7 +245,7 @@ void SimpleMenu::SearchUser()
 				<< std::setw(12) << tmp.at(i).GetDate() //<< "\t"
 				//<< (l.HasKey() ? "Si" : "No") << "\t"
 				//<< l.GetStatusDescription() << "\t"
-				<< std::setw(15) << (tmp.at(i).Enabled() ? "Habilitado" : "Deshabilitado") << "\n";
+				<< std::setw(15) << (tmp.at(i).Enabled() ? "Enabled" : "Disabled") << "\n";
 			std::cout << std::resetiosflags(std::ios_base::adjustfield);
 				//<< l.GetPreviousUser() << std::endl;
 		}
@@ -251,7 +254,7 @@ void SimpleMenu::SearchUser()
 	}
 	else
 	{
-		std::cout << "\n\tNo se encontraron resultados :( ...\n" << std::endl;
+		std::cout << "\n\tNo results :( ...\n" << std::endl;
 	}
 	
 

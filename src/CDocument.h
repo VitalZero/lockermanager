@@ -16,14 +16,14 @@ public:
 	}
 	~CDocument()
 	{
-		if(archivo.is_open())
-			archivo.close();
+		if(inFile.is_open())
+			inFile.close();
 	}
 	bool SaveData(std::vector<CLockers>& lockers);
 	bool LoadData(std::vector<CLockers>& lockers);
 
 private:
-	std::fstream archivo;
+	std::fstream inFile;
 	std::string path;
 };
 

@@ -20,13 +20,13 @@ public:
 private:
 	CLockManager& manager;
 	bool error = false;
-	enum class Opciones {
-		Listar = 1,
-		Cambiar,
-		Borrar,
-		Agregar,
-		Buscar,
-		Salir
+	enum class Options {
+		List = 1,
+		Change,
+		Delete,
+		Add,
+		Find,
+		Exit
 	};
 };
 
