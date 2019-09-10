@@ -87,7 +87,9 @@ bool CLockManager::GetLockers(std::vector<CLockers>& lockers_in, CLockers::Filte
 		case CLockers::Filter::Enabled:
 		case CLockers::Filter::NoKey:
 		case CLockers::Filter::WithKey:
-		case CLockers::Filter::Exit:
+		break;
+		default:
+			return false;
 		break;
 	}
 

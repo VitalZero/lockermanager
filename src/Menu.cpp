@@ -23,15 +23,16 @@ void SimpleMenu::ShowMenu()
 		std::cout << "\n\t\tLocker Manager\n";
 		std::cout << "\t\tMain Menu\n\n";
 		std::cout << "\tType one of the following options:\n";
-		std::cout << (int)Options::List << "  List lockers\n";
-		std::cout << (int)Options::Change << "  Change user\n";
-		std::cout << (int)Options::Delete << "  Delete user\n";
-		std::cout << (int)Options::Add << "  Add locker\n";
-		std::cout << (int)Options::Find << "  Find user\n";
-		std::cout << (int)Options::Exit << "  Exit" << std::endl;
 
-		std::string tmp;
-		std::getline(std::cin, tmp);
+		std::cout << LIST_LOCKERS << "  List lockers\n";
+		std::cout << CHANGE_USER << "  Change user\n";
+		std::cout << DELETE_USER << "  Delete user\n";
+		std::cout << ADD_LOCKER << "  Add locker\n";
+		std::cout << FIND_USER << "  Find user\n";
+		std::cout << EXIT_MENU << "  Exit" << std::endl;
+
+		std::string stringAnswer;
+		std::getline(std::cin, stringAnswer);
 
 		if(std::cin.fail() )
 		{
@@ -41,28 +42,28 @@ void SimpleMenu::ShowMenu()
 			error = true;
 		}
 
-		if(tmp != "")
-			answer = std::stoi(tmp);
+		if(stringAnswer != "")
+			answer = std::stoi(stringAnswer);
 
-		switch( (Options)answer )
+		switch( answer )
 		{
-		case Options::List:
+		case LIST_LOCKERS:
 			ShowLockers();
 			break;
-		case Options::Change:
+		case CHANGE_USER:
 			ChangeUser();
 			break;
-		case Options::Delete:
+		case DELETE_USER:
 			DeleteUser();
 			break;
-		case Options::Add:
+		case ADD_LOCKER:
 			AddUser();
 			break;
-		case Options::Exit:
-			running = false;
-		break;
-		case Options::Find:
+		case FIND_USER:
 			SearchUser();
+		break;
+		case EXIT_MENU:
+			running = false;
 		break;
 		default:
 			std::cout << "\t\nInvalid option\n" << std::endl;
@@ -77,12 +78,12 @@ void SimpleMenu::ChangeUser()
 {
 	std::cout << "\nWhich locker do you want to change?: ";
 
-	std::string tmp;
-	std::getline(std::cin, tmp);
+	std::string stringAnswer;
+	std::getline(std::cin, stringAnswer);
 	int answer = 0;
 
-	if(tmp != "")
-		answer = std::stoi(tmp);
+	if(stringAnswer != "")
+		answer = std::stoi(stringAnswer);
 
 	if( std::cin.fail() || answer == 0)
 	{
@@ -93,12 +94,11 @@ void SimpleMenu::ChangeUser()
 	}
 
 	std::cout << "Type new user's name: ";
-	std::string usuarioNuevo;
-	std::getline(std::cin,usuarioNuevo);
+	std::string newUser;
+	std::getline(std::cin,newUser);
 
-	if(manager.ChangeUser(answer, usuarioNuevo) )
+	if(manager.ChangeUser(answer, manager.ToUpper(newUser)) )
 	{
-		//manager.SaveChanges();
 		std::cout << "changing user" << std::endl;
 	}
 	else
@@ -108,24 +108,25 @@ void SimpleMenu::ChangeUser()
 
 	std::cout << "Press enter to continue..." << std::endl;
 
-	std::cin.ignore();
+	//tmp will trap buffer contents to avoid sending it to the next menu
+	std::getline(std::cin, stringAnswer);
 }
 
 void SimpleMenu::ShowLockers()
 {
 	// Show option to filter lockers
 	std::cout << "\n\tType one of the following options\n";
-	std::cout << "0 All\n";
-	std::cout << "1 Assigned\n";
-	std::cout << "2 Not assigned\n";
-	std::cout << "3 Good (not damaged)\n";
-	std::cout << "4 Bad (damaged)\n";
-	std::cout << "-1 Go back\n";
+	std::cout << (int)CLockers::Filter::All << " All\n";
+	std::cout << (int)CLockers::Filter::Assigned <<" Assigned\n";
+	std::cout << (int)CLockers::Filter::NotAssigned << " Not assigned\n";
+	std::cout << (int)CLockers::Filter::Good << " Good (not damaged)\n";
+	std::cout << (int)CLockers::Filter::Bad << " Bad (damaged)\n";
+	std::cout << EXIT_MENU << " Go back\n";
 
-	int answer;
+	int answer = 0;
 
-	std::string tmp;
-	std::getline(std::cin, tmp);
+	std::string stringAnswer;
+	std::getline(std::cin, stringAnswer);
 
 	if(std::cin.fail() )
 	{
@@ -135,49 +136,44 @@ void SimpleMenu::ShowLockers()
 		error = true;
 	}
 
-	if(tmp != "")
-		answer = std::stoi(tmp);
+	if(stringAnswer != "")
+		answer = std::stoi(stringAnswer);
 
 	std::cout << "\n";
 
-	// TODO: Change to a single if, for exit, for the rest use the function (function will filter correct input)
-	switch((CLockers::Filter)answer)
+	if(answer == EXIT_MENU)
 	{
-		case CLockers::Filter::All:
-		case CLockers::Filter::Assigned:
-		case CLockers::Filter::NotAssigned:
-		case CLockers::Filter::Good:
-		case CLockers::Filter::Bad:
+		std::cout << "Returning to previous menu" << std::endl;
+	}
+	else if( (answer >= (int)CLockers::Filter::All)
+			&& (answer <= (int)CLockers::Filter::Disabled) )
+	{
+		std::vector<CLockers> tmpLockers;
+
+		if(manager.GetLockers(tmpLockers, (CLockers::Filter)answer))
 		{
-			std::vector<CLockers> tmpLockers;
-			
-			if(manager.GetLockers(tmpLockers, (CLockers::Filter)answer))
+			for(unsigned int i = 0; i < tmpLockers.size(); ++i)
 			{
-				for(unsigned int i = 0; i < tmpLockers.size(); ++i)
-				{
-					std::cout << "# " << std::setw(2) << tmpLockers.at(i).GetLockerNumber() //<< "\t"
-						<< std::setiosflags(std::ios_base::left) << " "
-						<< std::setw(40) << tmpLockers.at(i).GetAssignedUser() //<< "\t"
-						<< std::setw(12) << tmpLockers.at(i).GetDate() //<< "\t"
-						//<< (l.HasKey() ? "Si" : "No") << "\t"
-						//<< l.GetStatusDescription() << "\t"
-						<< std::setw(15) << (tmpLockers.at(i).Enabled() ? "Enabled" : "Disabled") << std::endl;
-					std::cout << std::resetiosflags(std::ios_base::adjustfield);
-						//<< l.GetPreviousUser() << std::endl;
-				}
+				std::cout << "# " << std::setw(2) << tmpLockers.at(i).GetLockerNumber()
+					<< std::setiosflags(std::ios_base::left) << " "
+					<< std::setw(40) << tmpLockers.at(i).GetAssignedUser()
+					<< std::setw(12) << tmpLockers.at(i).GetDate()
+					<< std::setw(15) << (tmpLockers.at(i).Enabled() ? "Enabled" : "Disabled") << std::endl;
+				std::cout << std::resetiosflags(std::ios_base::adjustfield);
 			}
+
 			std::cout << "\n" << tmpLockers.size() << " lockers found\n";
 			std::cout << "Press enter to continue..." << std::endl;
-			std::cin.ignore();
+
+			//tmp will trap buffer contents to avoid sending it to the next menu
+			std::getline(std::cin, stringAnswer);
 		}
-		break;
-		case CLockers::Filter::Exit:
-			std::cout << "Returning to previous menu" << std::endl;
-		break;
-		default:
-			std::cout << "Invalid option, try again...\n" << std::endl;
-			std::cin.ignore();
-		break;
+	}
+	else
+	{
+		std::cout << "Invalid option, try again...\n" << std::endl;
+		//tmp will trap buffer contents to avoid sending it to the next menu
+		std::getline(std::cin, stringAnswer);
 	}
 }
 
@@ -192,8 +188,11 @@ void SimpleMenu::DeleteUser()
 void SimpleMenu::AddUser()
 {
 	std::cout << "Locker no: ";
-	int numero;
-	std::cin >> numero;
+
+	int lockerNum = 0;
+	std::string stringAnswer;
+	std::getline(std::cin, stringAnswer);
+
 	if(std::cin.fail() )
 	{
 		std::cin.clear();
@@ -201,19 +200,19 @@ void SimpleMenu::AddUser()
 		std::cerr << "Error!!! Invalid data" << std::endl;
 	}
 
-	std::cin.ignore();
+	if(stringAnswer != "")
+		lockerNum = std::stoi(stringAnswer);
 
 	std::cout << "Name: ";
-	std::string nombre;
-	std::getline(std::cin, nombre);
+	std::string newUser;
+	std::getline(std::cin, newUser);
 
-	// TODO: Check for string lenght, date should not be more then 8 characters (not including \0)
-	std::cout << "Date (dd/mm/yyy): ";
-	std::string fecha;
-	std::getline(std::cin, fecha);
-	std::cin.ignore();
+	// TODO: Check for string length, date should not be more than 8 characters (not including \0)
+	std::cout << "Date (dd/mm/yyyy): ";
+	std::string newDate;
+	std::getline(std::cin, newDate);
 
-	bool result = manager.AddLocker(CLockers(nombre, "SIN ASIGNAR", fecha, numero, 1, 1));
+	bool result = manager.AddLocker(CLockers(manager.ToUpper(newUser), "", newDate, lockerNum, 1, 1));
 
 	if(!result)
 		std::cerr << "Couldn't save database" << std::endl;
@@ -221,7 +220,7 @@ void SimpleMenu::AddUser()
 
 void SimpleMenu::SearchUser()
 {
-	std::cout << "\nTye user's name: ";
+	std::cout << "\nType user's name: ";
 	std::string user;
 	std::getline(std::cin, user);
 
@@ -232,22 +231,19 @@ void SimpleMenu::SearchUser()
 		std::cerr << "Error!!! Invalid data." << std::endl;
 	}
 
-	std::vector<CLockers> tmp;
-	if(manager.SearchUser(user, tmp))
+	std::vector<CLockers> tmpLockers;
+	if(manager.SearchUser(user, tmpLockers))
 	{
-		std::cout << "\n" << tmp.size() << "Lockers were found, listing..." << "\n";
+		std::cout << "\n" << tmpLockers.size() << " lockers were found, listing..." << "\n";
 
-		for(unsigned int i = 0; i < tmp.size(); ++i)
+		for(unsigned int i = 0; i < tmpLockers.size(); ++i)
 		{
-			std::cout << "# " << std::setw(2) << tmp.at(i).GetLockerNumber() //<< "\t"
+			std::cout << "# " << std::setw(2) << tmpLockers.at(i).GetLockerNumber()
 				<< std::setiosflags(std::ios_base::left) << " "
-				<< std::setw(40) << tmp.at(i).GetAssignedUser() //<< "\t"
-				<< std::setw(12) << tmp.at(i).GetDate() //<< "\t"
-				//<< (l.HasKey() ? "Si" : "No") << "\t"
-				//<< l.GetStatusDescription() << "\t"
-				<< std::setw(15) << (tmp.at(i).Enabled() ? "Enabled" : "Disabled") << "\n";
+				<< std::setw(40) << tmpLockers.at(i).GetAssignedUser()
+				<< std::setw(12) << tmpLockers.at(i).GetDate()
+				<< std::setw(15) << (tmpLockers.at(i).Enabled() ? "Enabled" : "Disabled") << "\n";
 			std::cout << std::resetiosflags(std::ios_base::adjustfield);
-				//<< l.GetPreviousUser() << std::endl;
 		}
 
 		std::cout << std::endl;

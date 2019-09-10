@@ -1,5 +1,14 @@
 #ifndef _CLOCKERS_H
 #define _CLOCKERS_H
+/*
+ * CLockers.h
+ * It is used by CLockManager.
+ * Everything related to a locker (probably should change name to Locker instead)
+ * Stores its number, assigned used, date on which it was assignated, status (good = 0, regular = 1, bad = 2)
+ * enabled (available, probably should change this too), owned, and previous user name
+ * It has enum for as filters, used by CLockManager
+ * Not too much to look here, just some getters, setters and operator overloads (>>, << and =)
+ */
 #include <iostream>
 #include <string>
 
@@ -8,9 +17,9 @@ class CLockers
 private:
 	std::string assigned;
 	std::string previous;
-	// TODO: Use ctime localtime to store date values, use date string to describe it
+	// TODO: In the future, use localtime to store date values, use date string to describe it
 	// TODO: Maybe create a date class using the above instructions and remove date string
-	// this is to use date differences if required (for days only)
+	// this is to use date differences if required (for days only, no hours or seconds or minutes)
 	std::string date;
 	int lockerNum;
 	bool hasKey;
@@ -29,18 +38,6 @@ public:
 		lockerNum(0),
 		hasKey(false),
 		status(0),
-		enabled(true),
-		isOwned(true)
-	{
-	}
-	CLockers(int locker_in)
-		:
-		assigned(""),
-		previous(""),
-		date(""),
-		lockerNum(locker_in),
-		hasKey(locker_in),
-		status(locker_in),
 		enabled(true),
 		isOwned(true)
 	{
@@ -74,20 +71,9 @@ public:
 	void SetDate(const std::string& newDate);
 	friend std::ostream& operator<<(std::ostream& stream, const CLockers& data);
 	friend std::istream& operator>>(std::istream& stream, CLockers& data);
-	/*enum class Filtro
-	{
-		// TODO: Cambiar el orden
-		BuenosTodos,
-		Regulares,
-		Malos,
-		Todos,
-		Asignados,
-		SinAsignar
-	};*/
 	enum class Filter
 	{
-		All, Assigned, NotAssigned, Good, Bad, NoKey, WithKey, Enabled, Disabled,
-		Exit = -1
+		All, Assigned, NotAssigned, Good, Bad, NoKey, WithKey, Enabled, Disabled
 	};
 };
 

@@ -1,10 +1,5 @@
-/*
- * CLocker.cpp
- *
- *  Created on: 11 feb 2019
- *      Author: jmichel
- */
 #include "CLockers.h"
+
 CLockers& CLockers::operator=(const CLockers& rhs)
 {
 	this->assigned = rhs.assigned;
@@ -95,7 +90,7 @@ std::ostream& operator<<(std::ostream& stream, const CLockers& data)
 		<< data.isOwned << "|"
 		<< data.hasKey << "|"
 		<< data.status << "|"
-		<< data.enabled << "|"; //\n opcional
+		<< data.enabled << "|"; //\n optional, should not affect functionality
 
 	return stream;
 }
@@ -104,28 +99,32 @@ std::istream& operator>>(std::istream& stream, CLockers& data)
 {
 	std::string temp;
 	// lockerNum
-	std::getline(stream, temp, '|'); // If the file is UNICODE, must ignore first 3 bytes of the file
+	std::getline(stream, temp, '|'); // If the file is saved as UNICODE, must ignore first 3 bytes of the file
 
-	if(stream.fail())
-		return stream;
+	if(stream.fail()) // for some weird reason, even the stream sets fail bit, it gives another loop (in CDocument::LoadData)
+		return stream;// so, sa the data is emtpy, it fills and emtpy string, then it is passed to std::stoi which in turn
+					  // throws and exception and exits inmediately from the app. This check prevents that.
+					  // also, using std::atoi fixes that, shows no error and everything works fine.
 
-	data.lockerNum = std::stoi(temp.c_str());
+	data.lockerNum = std::stoi(temp);
 
 	std::getline(stream, data.assigned, '|');
 	std::getline(stream, data.date, '|');
 	std::getline(stream, data.previous, '|');
 	// isOwned
 	std::getline(stream, temp, '|');
-	data.isOwned = std::stoi(temp.c_str());
+	data.isOwned = std::stoi(temp); // 1 = true, 0 = false, who cares
+	if(!data.isOwned)
+		data.assigned = "";
 	// hasKey
 	std::getline(stream, temp, '|');
-	data.hasKey = std::stoi(temp.c_str());
+	data.hasKey = std::stoi(temp);
 	// status
 	std::getline(stream, temp, '|');
-	data.status = std::stoi(temp.c_str());
+	data.status = std::stoi(temp);
 	// enabled
 	std::getline(stream, temp, '|');
-	data.enabled = std::stoi(temp.c_str());
+	data.enabled = std::stoi(temp);
 	//stream.ignore();
 
 	return stream;
